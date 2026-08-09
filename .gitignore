@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+backend/.venv/
+backend/inubil.db
+backend/uvicorn.log
+backend/.env
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/vite.log
+frontend/.env
+
+# Word lock files
+~$*
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
