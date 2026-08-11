@@ -12,7 +12,7 @@ from app.core.database import Base, SessionLocal, engine
 from app.core.security import get_password_hash
 from app.ml.predict import predict_risk
 from app.models.student import Student
-from app.models.user import Role, User
+from app.models.user import EnseignantAffectation, ResponsableFiliere, Role, User
 
 random.seed(7)
 
@@ -115,32 +115,47 @@ def main():
 
     db = SessionLocal()
     try:
+        admin = User(
+            email="admin@apexinubil.cm",
+            hashed_password=get_password_hash("admin123"),
+            full_name="Admin APEX INUBIL",
+            role=Role.ADMINISTRATEUR,
+            is_active=True,
+        )
         enseignant = User(
             email="enseignant@apexinubil.cm",
             hashed_password=get_password_hash("enseignant123"),
             full_name="M. Herve Kenfack",
             role=Role.ENSEIGNANT,
+            is_active=True,
         )
         responsable = User(
             email="responsable@apexinubil.cm",
             hashed_password=get_password_hash("responsable123"),
             full_name="Mme Larissa Ateba",
             role=Role.RESPONSABLE_PEDAGOGIQUE,
+            is_active=True,
         )
-        db.add_all([enseignant, responsable])
+        db.add_all([admin, enseignant, responsable])
         db.commit()
         db.refresh(enseignant)
+        db.refresh(responsable)
+
+        db.add_all([
+            ResponsableFiliere(user_id=responsable.id, filiere="GCI"),
+            ResponsableFiliere(user_id=responsable.id, filiere="GE"),
+            EnseignantAffectation(user_id=enseignant.id, filiere="GIT", niveau="Niveau4"),
+            EnseignantAffectation(user_id=enseignant.id, filiere="GIT", niveau="Niveau5"),
+        ])
+        db.commit()
 
         names = []
         for i in range(25):
             prenoms = PRENOMS_F if i % 2 == 0 else PRENOMS_M
             names.append((random.choice(NOMS), random.choice(prenoms)))
 
-        teacher_filiere = "GIT"
         students = build_students(names)
         for s in students:
-            if s.filiere == teacher_filiere:
-                s.enseignant_id = enseignant.id
             db.add(s)
         db.commit()
 
@@ -149,6 +164,7 @@ def main():
         nb_faible = sum(1 for s in students if s.risque_label == "faible")
         print(f"{len(students)} etudiants crees (faible={nb_faible}, moyen={nb_moyen}, eleve={nb_eleve})")
         print("Comptes de demo:")
+        print("  admin@apexinubil.cm / admin123")
         print("  enseignant@apexinubil.cm / enseignant123")
         print("  responsable@apexinubil.cm / responsable123")
     finally:

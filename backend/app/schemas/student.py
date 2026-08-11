@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -24,7 +26,8 @@ class StudentDetail(StudentOut):
     implication: int
     recommandation: str
     alerte_traitee: bool
-    enseignant_id: int | None
+    alerte_note: str | None
+    alerte_traitee_le: datetime | None
 
     class Config:
         from_attributes = True
@@ -38,6 +41,24 @@ class AlertOut(BaseModel):
     filiere: str
     risque_score: float
     alerte_traitee: bool
+    alerte_note: str | None
+    alerte_traitee_le: datetime | None
 
     class Config:
         from_attributes = True
+
+
+class TraiterAlerteIn(BaseModel):
+    note: str | None = None
+
+
+class ImportRowError(BaseModel):
+    ligne: int
+    matricule: str | None
+    message: str
+
+
+class ImportResult(BaseModel):
+    crees: int
+    mis_a_jour: int
+    erreurs: list[ImportRowError]

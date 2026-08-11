@@ -9,7 +9,7 @@ import {
 import { AppShell } from "../components/AppShell";
 import { fetchDashboardSummary } from "../api/students";
 
-const RISK_COLORS = { faible: "#1b8a6b", moyen: "#b3791a", eleve: "#cf4520" };
+const RISK_COLORS = { faible: "#1b8a6b", moyen: "#ab5a00", eleve: "#93000a" };
 
 export default function Statistiques() {
   const [summary, setSummary] = useState(null);
@@ -82,7 +82,7 @@ export default function Statistiques() {
               {repartition.map((r) => (
                 <div key={r.key} className="stat-legend__item">
                   <span className="stat-legend__dot" style={{ background: RISK_COLORS[r.key] }} />
-                  {r.name} — {r.value}
+                  {r.name} - {r.value}
                 </div>
               ))}
             </div>

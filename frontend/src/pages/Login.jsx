@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/logo.jpg";
+import logoTransparent from "../assets/logo-transparent.png";
 import "./Login.css";
 
 export default function Login() {
@@ -28,9 +30,6 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-page__brand">
-        <div className="login-page__brand-mark">AI</div>
-        <p className="login-page__brand-name">APEX INUBIL</p>
-
         <h1 className="login-page__headline">
           Anticipez l'échec académique avant qu'il ne survienne
         </h1>
@@ -62,6 +61,7 @@ export default function Login() {
 
       <div className="login-page__form-side">
         <form className="login-card" onSubmit={handleSubmit}>
+          <img src={logo} alt="APEX INUBIL" className="login-card__logo login-card__logo--center" />
           <h2>Bienvenue</h2>
           <p className="login-card__sub">Connectez-vous à votre espace</p>
 
@@ -97,7 +97,7 @@ export default function Login() {
           </button>
 
           <p className="login-card__footnote">
-            Accès réservé au personnel académique — contactez votre
+            Accès réservé au personnel académique - contactez votre
             administrateur pour obtenir un compte.
           </p>
         </form>

@@ -93,6 +93,61 @@ def recommendation_for(risk_label: str) -> str:
     }[risk_label]
 
 
+SEUIL_FACTEUR = -0.5  # ecarts-types en dessous de la moyenne d'entrainement
+
+
+def facteurs_a_surveiller(
+    presence_pct: float,
+    study_min: int,
+    bibliotheque_acces: str,
+    interaction_enseignant: str,
+    implication: int,
+) -> list[str]:
+    """Compare chaque facteur comportemental brut a la moyenne/ecart-type du
+    jeu d'entrainement (deja disponibles dans preprocessing.pkl) pour
+    identifier les points faibles reels de cet etudiant, sans reentrainer le
+    modele."""
+    bibliotheque_ord = FREQ_MAP[bibliotheque_acces]
+    interaction_ord = INTER_MAP[interaction_enseignant]
+
+    checks = [
+        (
+            _standardize(presence_pct, "presence_pct"),
+            "Assiduite en dessous de la moyenne : prendre contact rapidement pour "
+            "comprendre les causes d'absenteisme et proposer un plan de rattrapage.",
+        ),
+        (
+            _standardize(study_min, "study_min"),
+            "Temps d'etude personnel insuffisant : orienter vers des seances "
+            "d'etude encadrees et un accompagnement methodologique.",
+        ),
+        (
+            _standardize(bibliotheque_ord, "Acces a la bibliotheque_ord"),
+            "Faible frequentation de la bibliotheque : encourager l'acces aux "
+            "ressources documentaires et proposer un accompagnement.",
+        ),
+        (
+            _standardize(interaction_ord, "interaction_ord"),
+            "Interaction limitee avec les enseignants : programmer un entretien "
+            "individuel de suivi.",
+        ),
+        (
+            _standardize(implication, "implication"),
+            "Faible implication dans les travaux de groupe : l'integrer "
+            "davantage a des projets collectifs encadres.",
+        ),
+    ]
+    return [message for valeur, message in checks if valeur < SEUIL_FACTEUR]
+
+
+def build_recommendation(risk_label: str, facteurs: list[str]) -> str:
+    base = recommendation_for(risk_label)
+    if risk_label == "faible" or not facteurs:
+        return base
+    points = "\n".join(f"- {f}" for f in facteurs)
+    return f"{base}\nPoints d'attention identifies pour cet etudiant :\n{points}"
+
+
 def predict_risk(
     presence_pct: float,
     study_min: int,
@@ -116,9 +171,16 @@ def predict_risk(
     proba_reussite = float(_model.predict_proba(x.reshape(1, -1))[0])
     risk_score = 1.0 - proba_reussite
     label = risk_label_for(risk_score)
+    facteurs = facteurs_a_surveiller(
+        presence_pct=presence_pct,
+        study_min=study_min,
+        bibliotheque_acces=bibliotheque_acces,
+        interaction_enseignant=interaction_enseignant,
+        implication=implication,
+    )
     return {
         "proba_reussite": proba_reussite,
         "risque_score": risk_score,
         "risque_label": label,
-        "recommandation": recommendation_for(label),
+        "recommandation": build_recommendation(label, facteurs),
     }

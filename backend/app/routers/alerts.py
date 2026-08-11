@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -5,7 +7,7 @@ from app.core.database import get_db
 from app.deps import get_current_user
 from app.models.student import Student
 from app.models.user import User
-from app.schemas.student import AlertOut
+from app.schemas.student import AlertOut, TraiterAlerteIn
 from app.services.students import scoped_students_query
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
@@ -23,13 +25,26 @@ def list_alerts(
 @router.patch("/{student_id}/traiter", response_model=AlertOut)
 def marquer_traitee(
     student_id: int,
+    payload: TraiterAlerteIn,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     student = scoped_students_query(db, current_user).filter(Student.id == student_id).first()
     if student is None:
         raise HTTPException(status_code=404, detail="Etudiant introuvable")
-    student.alerte_traitee = not student.alerte_traitee
+
+    if not student.alerte_traitee:
+        if not payload.note or not payload.note.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="Une note est requise pour marquer une alerte comme traitee",
+            )
+        student.alerte_traitee = True
+        student.alerte_note = payload.note.strip()
+        student.alerte_traitee_le = datetime.utcnow()
+    else:
+        student.alerte_traitee = False
+
     db.commit()
     db.refresh(student)
     return student

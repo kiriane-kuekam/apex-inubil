@@ -3,6 +3,7 @@ uvicorn[standard]
 sqlalchemy
 pydantic
 pydantic-settings
+email-validator
 python-jose[cryptography]
 passlib
 bcrypt==4.0.1
@@ -10,3 +11,4 @@ python-multipart
 joblib
 numpy
 pandas
+openpyxl

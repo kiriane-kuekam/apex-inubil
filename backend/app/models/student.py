@@ -1,5 +1,7 @@
-from sqlalchemy import Float, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import datetime
+
+from sqlalchemy import DateTime, Float, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
 
@@ -26,9 +28,11 @@ class Student(Base):
     # Resultat de la prediction
     risque_score: Mapped[float] = mapped_column(Float, default=0.0)  # 0 = aucun risque, 1 = risque maximal
     risque_label: Mapped[str] = mapped_column(String(20), default="faible")  # faible/moyen/eleve
-    recommandation: Mapped[str] = mapped_column(String(500), default="")
+    recommandation: Mapped[str] = mapped_column(Text, default="")
 
+    # L'acces enseignant/responsable est derive des affectations (voir
+    # app/services/students.py::scoped_students_query), pas d'un FK direct :
+    # un etudiant peut etre suivi par plusieurs enseignants (plusieurs matieres).
     alerte_traitee: Mapped[bool] = mapped_column(default=False)
-
-    enseignant_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    enseignant: Mapped["User"] = relationship(back_populates="students")  # noqa: F821
+    alerte_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    alerte_traitee_le: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

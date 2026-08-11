@@ -4,13 +4,24 @@ import { ProtectedRoute } from "./router/ProtectedRoute";
 import Login from "./pages/Login";
 import DashboardResponsable from "./pages/DashboardResponsable";
 import DashboardEnseignant from "./pages/DashboardEnseignant";
+import DashboardAdmin from "./pages/DashboardAdmin";
+import GestionUtilisateurs from "./pages/GestionUtilisateurs";
+import GestionFilieres from "./pages/GestionFilieres";
 import FicheEtudiant from "./pages/FicheEtudiant";
 import Alertes from "./pages/Alertes";
 import Statistiques from "./pages/Statistiques";
+import ImportEtudiants from "./pages/ImportEtudiants";
+
+const HOME_BY_ROLE = {
+  administrateur: DashboardAdmin,
+  enseignant: DashboardEnseignant,
+  responsable_pedagogique: DashboardResponsable,
+};
 
 function Home() {
   const { user } = useAuth();
-  return user?.role === "enseignant" ? <DashboardEnseignant /> : <DashboardResponsable />;
+  const HomeComponent = HOME_BY_ROLE[user?.role] || DashboardResponsable;
+  return <HomeComponent />;
 }
 
 function App() {
@@ -34,6 +45,18 @@ function App() {
 
           <Route path="/statistiques" element={
             <ProtectedRoute roles={["responsable_pedagogique"]}><Statistiques /></ProtectedRoute>
+          } />
+
+          <Route path="/importer" element={
+            <ProtectedRoute roles={["responsable_pedagogique"]}><ImportEtudiants /></ProtectedRoute>
+          } />
+
+          <Route path="/utilisateurs" element={
+            <ProtectedRoute roles={["administrateur"]}><GestionUtilisateurs /></ProtectedRoute>
+          } />
+
+          <Route path="/filieres" element={
+            <ProtectedRoute roles={["administrateur"]}><GestionFilieres /></ProtectedRoute>
           } />
 
           <Route path="*" element={<Navigate to="/" replace />} />

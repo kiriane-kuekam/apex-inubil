@@ -5,7 +5,7 @@ import { RiskBadge } from "../components/RiskBadge";
 import { fetchStudent } from "../api/students";
 import "./FicheEtudiant.css";
 
-const RISK_COLOR = { faible: "#1b8a6b", moyen: "#b3791a", eleve: "#cf4520" };
+const RISK_COLOR = { faible: "#1b8a6b", moyen: "#ab5a00", eleve: "#93000a" };
 
 const ETUDE_LABELS = {
   15: "< 30 min / jour",

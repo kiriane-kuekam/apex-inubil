@@ -1,16 +1,9 @@
-import { useEffect, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useEffect, useMemo, useState } from "react";
+import { ChartColumnBig, Network, Search, TriangleAlert, Users } from "lucide-react";
 import { AppShell } from "../components/AppShell";
 import { StudentsTable } from "../components/StudentsTable";
+import { RiskDistributionChart } from "../components/RiskDistributionChart";
+import { StatTile } from "../components/StatTile";
 import { fetchDashboardSummary, fetchStudents } from "../api/students";
 
 export default function DashboardResponsable() {
@@ -18,6 +11,7 @@ export default function DashboardResponsable() {
   const [students, setStudents] = useState([]);
   const [filiere, setFiliere] = useState("");
   const [risque, setRisque] = useState("");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,6 +30,17 @@ export default function DashboardResponsable() {
 
   const filieres = summary?.par_filiere.map((f) => f.filiere) || [];
 
+  const visibleStudents = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return students;
+    return students.filter(
+      (s) =>
+        s.nom.toLowerCase().includes(q) ||
+        s.prenom.toLowerCase().includes(q) ||
+        s.matricule.toLowerCase().includes(q)
+    );
+  }, [students, search]);
+
   return (
     <AppShell>
       <div className="page-header">
@@ -50,69 +55,81 @@ export default function DashboardResponsable() {
 
       {summary && (
         <div className="stat-grid">
-          <div className="stat-tile">
-            <div className="stat-tile__label">Étudiants suivis</div>
-            <div className="stat-tile__value">{summary.nb_etudiants}</div>
-          </div>
-          <div className="stat-tile">
-            <div className="stat-tile__label">Score de risque moyen</div>
-            <div className="stat-tile__value stat-tile__value--primary">
-              {Math.round(summary.score_moyen * 100)}%
-            </div>
-          </div>
-          <div className="stat-tile">
-            <div className="stat-tile__label">Étudiants à risque élevé</div>
-            <div className="stat-tile__value stat-tile__value--accent">
-              {summary.nb_a_risque_eleve}
-            </div>
-          </div>
-          <div className="stat-tile">
-            <div className="stat-tile__label">Filières couvertes</div>
-            <div className="stat-tile__value">{summary.par_filiere.length}</div>
-          </div>
+          <StatTile label="Étudiants suivis" value={summary.nb_etudiants} icon={Users} />
+
+          <StatTile
+            label="Score de risque moyen"
+            value={`${Math.round(summary.score_moyen * 100)}%`}
+            icon={ChartColumnBig}
+            variant="primary"
+            progressPct={Math.round(summary.score_moyen * 100)}
+          />
+
+          <StatTile
+            label="Étudiants à risque élevé"
+            value={summary.nb_a_risque_eleve}
+            icon={TriangleAlert}
+            variant="accent"
+            caption="étudiants critiques"
+          />
+
+          <StatTile
+            label="Filières couvertes"
+            value={summary.par_filiere.length}
+            icon={Network}
+            pills={filieres}
+          />
         </div>
       )}
 
-      {summary && (
-        <div className="card" style={{ marginBottom: 24 }}>
-          <div className="card__header">
-            <h2>Répartition du risque par filière</h2>
+      <div className="dashboard-grid">
+        {summary && (
+          <div className="card">
+            <div className="card__header">
+              <h2>Répartition du risque</h2>
+            </div>
+            <div className="card__body">
+              <p className="cell-muted" style={{ marginBottom: 16 }}>
+                Vue par filière des niveaux de risque d'échec estimé par le modèle.
+              </p>
+              <RiskDistributionChart data={summary.par_filiere} />
+            </div>
+          </div>
+        )}
+
+        <div className="card">
+          <div className="card__header card__header--wrap">
+            <div>
+              <h2>Étudiants suivis</h2>
+              <p className="cell-muted" style={{ marginTop: 2 }}>
+                Liste détaillée triée par score de risque décroissant.
+              </p>
+            </div>
+            <div className="search-field">
+              <Search size={15} className="search-field__icon" />
+              <input
+                type="text"
+                placeholder="Rechercher matricule, nom..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
           <div className="card__body">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={summary.par_filiere}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e6ee" vertical={false} />
-                <XAxis dataKey="filiere" tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="nb_faible" stackId="a" name="Faible" fill="#1b8a6b" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="nb_moyen" stackId="a" name="Modéré" fill="#b3791a" />
-                <Bar dataKey="nb_eleve" stackId="a" name="Élevé" fill="#cf4520" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="filters-row">
+              <select className="select-field" value={filiere} onChange={(e) => setFiliere(e.target.value)}>
+                <option value="">Toutes les filières</option>
+                {filieres.map((f) => <option key={f} value={f}>{f}</option>)}
+              </select>
+              <select className="select-field" value={risque} onChange={(e) => setRisque(e.target.value)}>
+                <option value="">Tous les niveaux de risque</option>
+                <option value="faible">Faible</option>
+                <option value="moyen">Modéré</option>
+                <option value="eleve">Élevé</option>
+              </select>
+            </div>
+            {loading ? <p className="cell-muted">Chargement…</p> : <StudentsTable students={visibleStudents} />}
           </div>
-        </div>
-      )}
-
-      <div className="card">
-        <div className="card__header">
-          <h2>Étudiants</h2>
-        </div>
-        <div className="card__body">
-          <div className="filters-row">
-            <select className="select-field" value={filiere} onChange={(e) => setFiliere(e.target.value)}>
-              <option value="">Toutes les filières</option>
-              {filieres.map((f) => <option key={f} value={f}>{f}</option>)}
-            </select>
-            <select className="select-field" value={risque} onChange={(e) => setRisque(e.target.value)}>
-              <option value="">Tous les niveaux de risque</option>
-              <option value="faible">Faible</option>
-              <option value="moyen">Modéré</option>
-              <option value="eleve">Élevé</option>
-            </select>
-          </div>
-          {loading ? <p className="cell-muted">Chargement…</p> : <StudentsTable students={students} />}
         </div>
       </div>
     </AppShell>

@@ -19,6 +19,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou mot de passe incorrect",
         )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Ce compte a ete desactive",
+        )
     token = create_access_token(subject=user.email, role=user.role.value)
     return Token(access_token=token, role=user.role, full_name=user.full_name)
 

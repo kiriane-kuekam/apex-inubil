@@ -20,7 +20,16 @@ export async function fetchAlerts() {
   return data;
 }
 
-export async function toggleAlertTraitee(id) {
-  const { data } = await apiClient.patch(`/alerts/${id}/traiter`);
+export async function toggleAlertTraitee(id, note) {
+  const { data } = await apiClient.patch(`/alerts/${id}/traiter`, { note });
+  return data;
+}
+
+export async function importStudents(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await apiClient.post("/students/import", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return data;
 }

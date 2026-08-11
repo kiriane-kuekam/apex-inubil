@@ -22,7 +22,7 @@
   border-radius: 50%;
   background: conic-gradient(
     var(--gauge-color) calc(var(--gauge-pct) * 1%),
-    #eef0f4 0
+    var(--color-border) 0
   );
   display: flex;
   align-items: center;

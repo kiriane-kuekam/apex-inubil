@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { ChartColumnBig, TriangleAlert, Users } from "lucide-react";
 import { AppShell } from "../components/AppShell";
 import { StudentsTable } from "../components/StudentsTable";
+import { StatTile } from "../components/StatTile";
 import { fetchDashboardSummary, fetchStudents } from "../api/students";
 import { useAuth } from "../context/AuthContext";
 
@@ -38,22 +40,23 @@ export default function DashboardEnseignant() {
 
       {summary && (
         <div className="stat-grid">
-          <div className="stat-tile">
-            <div className="stat-tile__label">Étudiants suivis</div>
-            <div className="stat-tile__value">{summary.nb_etudiants}</div>
-          </div>
-          <div className="stat-tile">
-            <div className="stat-tile__label">Score de risque moyen</div>
-            <div className="stat-tile__value stat-tile__value--primary">
-              {Math.round(summary.score_moyen * 100)}%
-            </div>
-          </div>
-          <div className="stat-tile">
-            <div className="stat-tile__label">À risque élevé</div>
-            <div className="stat-tile__value stat-tile__value--accent">
-              {summary.nb_a_risque_eleve}
-            </div>
-          </div>
+          <StatTile label="Étudiants suivis" value={summary.nb_etudiants} icon={Users} />
+
+          <StatTile
+            label="Score de risque moyen"
+            value={`${Math.round(summary.score_moyen * 100)}%`}
+            icon={ChartColumnBig}
+            variant="primary"
+            progressPct={Math.round(summary.score_moyen * 100)}
+          />
+
+          <StatTile
+            label="Étudiants à risque élevé"
+            value={summary.nb_a_risque_eleve}
+            icon={TriangleAlert}
+            variant="accent"
+            caption="étudiants critiques"
+          />
         </div>
       )}
 
